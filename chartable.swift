@@ -23,9 +23,63 @@ if Process.arguments.count < 2 {
     exit(2)
 }
 
+extension NSMutableCharacterSet {
+    func addCharacter(i: Int) {
+        self.addCharactersInRange(NSMakeRange(i, 1))
+    }
+}
+
+
+/// Character set of Swift operator-head characters.
+func swiftOperatorHeadCharacterSet() -> NSCharacterSet {
+    let cset = NSMutableCharacterSet()
+    // operator-head → /  =  -  +  !  *  %  <  >  &  | ^  ~  ?
+    cset.addCharactersInString("/=-+!*%<>&|^~?")
+    //‌ operator-head → U+00A1–U+00A7
+    cset.addCharactersInRange(NSRange(0xA1...0xA7))
+    //‌ operator-head → U+00A9 or U+00AB
+    cset.addCharacter(0xA9)
+    cset.addCharacter(0xAB)
+    //‌ operator-head → U+00AC or U+00AE
+    cset.addCharacter(0xAC)
+    cset.addCharacter(0xAE)
+    //‌ operator-head → U+00B0–U+00B1, U+00B6, U+00BB, U+00BF, U+00D7, or U+00F7
+    cset.addCharactersInRange(NSRange(0xB0...0xB1))
+    cset.addCharacter(0xB6)
+    cset.addCharacter(0xBB)
+    cset.addCharacter(0xBF)
+    cset.addCharacter(0xD7)
+    cset.addCharacter(0xF7)
+    //‌ operator-head → U+2016–U+2017 or U+2020–U+2027
+    cset.addCharactersInRange(NSRange(0x2016...0x2017))
+    cset.addCharactersInRange(NSRange(0x2020...0x2027))
+    //‌ operator-head → U+2030–U+203E
+    cset.addCharactersInRange(NSRange(0x2030...0x203E))
+    //‌ operator-head → U+2041–U+2053
+    cset.addCharactersInRange(NSRange(0x2041...0x2053))
+    //‌ operator-head → U+2055–U+205E
+    cset.addCharactersInRange(NSRange(0x2055...0x205E))
+    // operator-head → U+2190–U+23FF
+    cset.addCharactersInRange(NSRange(0x2190...0x23FF))
+    // operator-head → U+2500–U+2775
+    cset.addCharactersInRange(NSRange(0x2500...0x2775))
+    // operator-head → U+2794–U+2BFF
+    cset.addCharactersInRange(NSRange(0x2794...0x2BFF))
+    // operator-head → U+2E00–U+2E7F
+    cset.addCharactersInRange(NSRange(0x2E00...0x2E7F))
+    // operator-head → U+3001–U+3003
+    cset.addCharactersInRange(NSRange(0x3001...0x3003))
+    // operator-head → U+3008–U+3030
+    cset.addCharactersInRange(NSRange(0x3008...0x3030))
+    return cset.copy() as NSCharacterSet
+}
+
+// Pick the character set from the command-line arg.
 let charsetName = Process.arguments[1]
 let (charset: NSCharacterSet, title: String) = {
     switch (charsetName) {
+    case "operators":
+        return (swiftOperatorHeadCharacterSet(), "Swift Operator Head")
     case "letters":
         return (NSCharacterSet.letterCharacterSet(), "Letters")
     case "punctuation":
@@ -54,12 +108,22 @@ extension NSData {
     } }
 }
 
+/// Return the character for a row and column in the table.
 func bitChar(base: UInt32, bits: UInt16, column: UInt16) -> UnicodeScalar? {
     let mask = 1 << column
     if mask & bits == 0 {
         return nil
     } else {
         return UnicodeScalar(base+UInt32(column))
+    }
+}
+
+// Returns HTML entity for characters that need escaping.
+func escape(c: UnicodeScalar) -> String {
+    switch c {
+    case "<": return "&lt;"
+    case ">": return "&gt;"
+    default: return String(c)
     }
 }
 
@@ -85,7 +149,8 @@ for i in 0..<charsetBits.count16 {
         //autoreleasepool {
         for col: UInt16 in 0...15 {
             if let ch = bitChar(row, bits, col) {
-                print("<th>\(ch)</th>") // TODO: escape character
+                let s = escape(ch)
+                print("<th>\(s)</th>")
             }
             else {
                 print("<th></th>")

@@ -8,7 +8,7 @@
 <tr><th>20</th>
 <th></th><th></th><th></th><th></th><th>$</th><th></th><th></th><th></th><th></th><th></th><th></th><th>+</th><th></th><th></th><th></th><th></th></tr>
 <tr><th>30</th>
-<th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th><</th><th>=</th><th>></th><th></th></tr>
+<th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th>&lt;</th><th>=</th><th>&gt;</th><th></th></tr>
 <tr><th>50</th>
 <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th>^</th><th></th></tr>
 <tr><th>60</th>
