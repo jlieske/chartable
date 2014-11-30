@@ -13,9 +13,11 @@ func usage() {
     println("Generates a Markdown file with a table listing the characters")
     println("that in the named character set.")
     println("Allowed values for character set name:")
-    println("  letters (default): NSCharacterSet.letterCharacterSet")
+    println("  operators: Swift language operator head characters")
+    println("  letters: NSCharacterSet.letterCharacterSet")
     println("  punctuation: NSCharacterSet.punctuationCharacterSet")
     println("  symbols: NSCharacterSet.symbolCharacterSet")
+    println("  sympunct: symbols ∪ punctuation")
 }
 
 if Process.arguments.count < 2 {
@@ -23,12 +25,26 @@ if Process.arguments.count < 2 {
     exit(2)
 }
 
+extension UnicodeScalar {
+    var intValue: Int { get {return Int(self.value)} }
+}
+
 extension NSMutableCharacterSet {
     func addCharacter(i: Int) {
         self.addCharactersInRange(NSMakeRange(i, 1))
     }
+    func addCharacter(ch: UnicodeScalar) {
+        self.addCharactersInRange(NSMakeRange(ch.intValue, 1))
+    }
 }
 
+extension NSCharacterSet {
+    func unionWithCharacterSet(otherSet: NSCharacterSet) -> NSCharacterSet {
+        let set: NSMutableCharacterSet = self.mutableCopy() as NSMutableCharacterSet
+        set.formUnionWithCharacterSet(otherSet)
+        return set.copy() as NSMutableCharacterSet
+    }
+}
 
 /// Character set of Swift operator-head characters.
 func swiftOperatorHeadCharacterSet() -> NSCharacterSet {
@@ -71,6 +87,8 @@ func swiftOperatorHeadCharacterSet() -> NSCharacterSet {
     cset.addCharactersInRange(NSRange(0x3001...0x3003))
     // operator-head → U+3008–U+3030
     cset.addCharactersInRange(NSRange(0x3008...0x3030))
+    // dot-operator-head → ..
+    cset.addCharacter(".")
     return cset.copy() as NSCharacterSet
 }
 
@@ -86,6 +104,10 @@ let (charset: NSCharacterSet, title: String) = {
         return (NSCharacterSet.punctuationCharacterSet(), "Punctuation")
     case "symbols":
         return (NSCharacterSet.symbolCharacterSet(), "Symbols")
+    case "sympunct":
+        return (NSCharacterSet.symbolCharacterSet()
+                .unionWithCharacterSet(NSCharacterSet.punctuationCharacterSet()), 
+            "Symbols and Punctuation")
     case let name:
         println("Unknown character set name: \(name)")
         usage()
@@ -121,6 +143,7 @@ func bitChar(base: UInt32, bits: UInt16, column: UInt16) -> UnicodeScalar? {
 // Returns HTML entity for characters that need escaping.
 func escape(c: UnicodeScalar) -> String {
     switch c {
+    case "&": return "&amp;"
     case "<": return "&lt;"
     case ">": return "&gt;"
     default: return String(c)
@@ -150,10 +173,10 @@ for i in 0..<charsetBits.count16 {
         for col: UInt16 in 0...15 {
             if let ch = bitChar(row, bits, col) {
                 let s = escape(ch)
-                print("<th>\(s)</th>")
+                print("<td>\(s)</td>")
             }
             else {
-                print("<th></th>")
+                print("<td></td>")
             }
         }
         //}
